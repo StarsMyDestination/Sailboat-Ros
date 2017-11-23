@@ -5,7 +5,7 @@
 
 
 namespace detection {
-    cv::Mat edgeDetection(cv::Mat img_src, u_int8_t low_threshold = 100, u_int8_t high_threshold = 200);
+    cv::Mat edgeDetection(cv::Mat img_src, cv::Mat& s_img, u_int8_t low_threshold = 100, u_int8_t high_threshold = 200);
 
     std::vector<cv::Vec3f> circleDectection(cv::Mat &src_img, cv::Mat edge);
 }

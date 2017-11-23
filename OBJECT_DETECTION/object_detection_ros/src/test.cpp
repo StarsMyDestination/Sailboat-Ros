@@ -25,8 +25,8 @@ int main() {
 
 //    cv::imwrite("result.jpg", image);
     cv::waitKey(0);
-
-    cv::Mat edge = detection::edgeDetection(image);
+    cv::Mat s_img;
+    cv::Mat edge = detection::edgeDetection(image, s_img);
 
     cv::imshow("edge", edge);
 

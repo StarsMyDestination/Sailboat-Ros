@@ -14,12 +14,12 @@ plt.rcParams['axes.unicode_minus'] = False  # 用来正常显示负
 target_x_list = [-60, -50, -20]
 target_y_list = [30, -20, 0]
 
-obs_num = 9
+obs_num = 6
 
 basename = '{}obs'.format(obs_num)
 
-# map_file = '0obs/map_1028_0obs.txt'
-# path_file = '0obs/path_1028_0obs.txt'
+# map_file = '0obs/map_1028_6obs.txt'
+# path_file = '0obs/path_1028_6obs.txt'
 
 map_file = os.path.join(basename, 'map_1028_{}obs.txt'.format(obs_num))
 path_file = os.path.join(basename, 'path_1028_{}obs.txt'.format(obs_num))
@@ -66,8 +66,8 @@ def map_path_plot(wind, heading, path_x, path_y, obs_x, obs_y, map_size):
     n_row, n_col = map_size
     # print('wind: {}'.format(wind))
     # print('heading: {}'.format(heading))
-    if len(path_x) > 1:
-        path_x_f, path_y_f = get_spline(path_x, path_y, heading)
+    # if len(path_x) > 1:
+    #     path_x_f, path_y_f = get_spline(path_x, path_y, heading)
 
     windVecLength = 1.8
     windVec = [windVecLength * math.cos(wind), windVecLength * math.sin(wind)]
@@ -79,8 +79,8 @@ def map_path_plot(wind, heading, path_x, path_y, obs_x, obs_y, map_size):
     # plt.figure(figsize=(6, 4), dpi=98)
     p1 = plt.subplot(111)
     if len(path_x) > 1:
-        p1.plot(np.array(path_y), np.array(path_x), label=u'规划路径')
-        p1.plot(np.array(path_y_f), np.array(path_x_f), label=u'光滑路径')
+        p1.plot(np.array(path_y), np.array(path_x), color='orange', label=u'规划路径')
+        # p1.plot(np.array(path_y_f), np.array(path_x_f), label=u'光滑路径')
         p1.scatter([path_y[0]], [path_x[0]], s=20, c='green')  # start
         p1.scatter([path_y[-1]], [path_x[-1]], s=20, c='green')  # end
         p1.text(path_y[0], path_x[0], s=u'起点', fontsize=8, color='black')
@@ -119,29 +119,35 @@ def map_path_plot(wind, heading, path_x, path_y, obs_x, obs_y, map_size):
 
 
 def wind_plot(wind_1, wind_2=None, unwrap=False):
+    t = np.array(range(0, len(wind_1))) * 0.1
     if unwrap is True:
         wind_1_array = np.unwrap(np.array(wind_1), discont=np.pi * 1.8)
     else:
         wind_1_array = np.array(wind_1)
     plt.figure('wind')
-    plt.plot(wind_1_array * 57.3)
+    plt.plot(t, wind_1_array * 57.3, linewidth=1, label=u'原始风向')
     if wind_2 is not None:
         if unwrap is True:
             wind_2_array = np.unwrap(np.array(wind_2), discont=np.pi * 1.8)
         else:
             wind_2_array = np.array(wind_2)
-        plt.plot(wind_2_array * 57.3)
+        plt.plot(t, wind_2_array * 57.3, linewidth=1, label=u'平均风向')
+        plt.legend()
+    plt.xlabel('t/s')
+    plt.ylabel(u'真风风向 /度')
+    file_path = os.path.join(basename, 'wind.svg')
+    plt.savefig(file_path)
     plt.show()
 
 
 def ne_path_plot(ego_x_list, ego_y_list, path_ne_x, path_ne_y, n, wind, obs_x, obs_y):
     print("frame {}, wind: {}".format(n, wind))
-    plt.figure('ne_path')
+    plt.figure('ne_path', figsize=(8, 8))
     p1 = plt.subplot(111)
 
-    p1.plot(np.array(ego_y_list[0:n]), np.array(ego_x_list[0:n]), 'b', label=u'当前路径')
-    p1.plot(np.array(ego_y_list[n:-1]), np.array(ego_x_list[n:-1]), 'b--', label=u'全部路径')
-    p1.plot(np.array(path_ne_y), np.array(path_ne_x), 'r', label=u'规划路径')
+    p1.plot(np.array(ego_y_list[0:n]), np.array(ego_x_list[0:n]), 'g', label=u'当前路径')
+    p1.plot(np.array(ego_y_list[n:-1]), np.array(ego_x_list[n:-1]), 'g--', label=u'全部路径')
+    p1.plot(np.array(path_ne_y), np.array(path_ne_x), 'orange', label=u'规划路径', linewidth=2)
 
     p1.scatter(np.array(obs_y), np.array(obs_x), s=120, c='red', label=u'障碍物')
 
@@ -165,7 +171,11 @@ def ne_path_plot(ego_x_list, ego_y_list, path_ne_x, path_ne_y, n, wind, obs_x, o
 
     p1.set_aspect(1)
     # p1.grid(linestyle='--', linewidth=0.5)
-    p1.legend(loc='upper right', fontsize=12)
+    p1.legend(loc='lower left', fontsize=12)
+    if obs_num == 3 or obs_num == 0:
+        p1.axis([-30, 40, -70, 0])
+    else:
+        p1.axis([-30, 40, -75, -10])
 
     file_folder = os.path.join(basename, 'imgs')
     if not os.path.exists(file_folder):
@@ -267,13 +277,13 @@ if __name__ == '__main__':
 
     # wind_plot(wind_list, wind_ave_list)
     wind_plot(wind_ave_list, unwrap=False)
-
-    for path_frame in range(20, 30):
-        # path_frame = 24
-        n = path_frame * 20 - 1
-        map_path_plot(wind_ave_list[n], heading_list[n], path_row_list[path_frame], path_col_list[path_frame],
-                      obs_row_list[path_frame], obs_col_list[path_frame],
-                      map_size_list[path_frame])
-
-        ne_path_plot(ego_x_list, ego_y_list, path_x_list[path_frame], path_y_list[path_frame], n, wind_ave_list[n],
-                     obs_x_list[n], obs_y_list[n])
+    #
+    # for path_frame in range(0, 200):
+    #     # path_frame = 24
+    #     n = (path_frame + 1) * 20 - 1
+    #     map_path_plot(wind_ave_list[n], heading_list[n], path_row_list[path_frame], path_col_list[path_frame],
+    #                   obs_row_list[path_frame], obs_col_list[path_frame],
+    #                   map_size_list[path_frame])
+    #
+    #     ne_path_plot(ego_x_list, ego_y_list, path_x_list[path_frame], path_y_list[path_frame], n, wind_ave_list[n],
+    #                  obs_x_list[100], obs_y_list[100])

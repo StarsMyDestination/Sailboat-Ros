@@ -16,20 +16,23 @@
 using namespace std;
 //using namespace cv;
 
-image_transport::Publisher  pub_img_edge;
-image_transport::Publisher  pub_img_dst;
+image_transport::Publisher pub_img_edge;
+image_transport::Publisher pub_img_dst;
+image_transport::Publisher pub_img_sat;
 
-void detection_cb(const sensor_msgs::ImageConstPtr& img_in)
-{
+void detection_cb(const sensor_msgs::ImageConstPtr &img_in) {
     cv::Mat src_img;
-    cv_bridge::toCvShare(img_in,"bgr8")->image.copyTo(src_img);
+    cv_bridge::toCvShare(img_in, "bgr8")->image.copyTo(src_img);
 //    src_img = cv::imdecode(cv::Mat(img_in->data),3);//convert compressed image data to cv::Mat
 //    cv::imshow("src", src_img);
 //    cv::waitKey(5);
     cv::Mat src_ROI;
-    int src_ROI_p1_y = IMG_HEIGHT/3;
-    src_ROI = src_img(cv::Rect(0,src_ROI_p1_y,IMG_WIDTH,IMG_HEIGHT-src_ROI_p1_y));
-    cv::Mat edge = detection::edgeDetection(src_ROI, 150, 200);
+    int src_ROI_p1_y = IMG_HEIGHT / 3;
+    src_ROI = src_img(cv::Rect(0, src_ROI_p1_y + 20, IMG_WIDTH, IMG_HEIGHT - src_ROI_p1_y - 100));
+    cv::Mat s_img;
+    cv::Mat edge = detection::edgeDetection(src_ROI, s_img, 150, 200);
+//    cv::imshow("src", s_img);
+//    cv::waitKey(5);
     std::vector<cv::Vec3f> circles = detection::circleDectection(src_ROI, edge);
     std::cout << "detected circles: " << circles.size() << std::endl;
     for (size_t i = 0; i < circles.size(); i++) {
@@ -38,6 +41,9 @@ void detection_cb(const sensor_msgs::ImageConstPtr& img_in)
 
 //    cv::imshow("src", src_ROI);
 //    cv::waitKey(5);
+
+    sensor_msgs::ImagePtr sat_msg = cv_bridge::CvImage(std_msgs::Header(), "mono8", s_img).toImageMsg();
+    pub_img_sat.publish(sat_msg);
 
     sensor_msgs::ImagePtr edge_msg = cv_bridge::CvImage(std_msgs::Header(), "mono8", edge).toImageMsg();
     pub_img_edge.publish(edge_msg);
@@ -48,18 +54,18 @@ void detection_cb(const sensor_msgs::ImageConstPtr& img_in)
 }
 
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
     ros::init(argc, argv, "detection");
     ros::NodeHandle nh;
 
 //    ros::Subscriber sub_image =  nh.subscribe("camera/image_rect_color", 2, &detection_cb);
-    ros::Subscriber sub_image =  nh.subscribe("camera/image_raw", 2, &detection_cb);
+    ros::Subscriber sub_image = nh.subscribe("camera/image_raw", 2, &detection_cb);
 //    ros::Subscriber sub_image =  nh.subscribe("camera/image_raw/compressed", 2, &detection_cb);
 
     image_transport::ImageTransport it(nh);
     pub_img_edge = it.advertise("edges", 2);
     pub_img_dst = it.advertise("dst_circles", 2);
+    pub_img_sat = it.advertise("img_sat", 2);
 
     ros::spin();
     return 0;

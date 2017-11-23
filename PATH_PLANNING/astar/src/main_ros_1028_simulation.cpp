@@ -43,7 +43,8 @@ static double alpha = 1;
 static double beta = 1;
 
 
-static int obs_switch = 3;
+
+static int obs_switch = 2;
 
 Astar astar;
 
@@ -363,11 +364,11 @@ int main(int argc, char **argv) {
     std::stringstream ss;
     ss << obs_switch * 3;
     std::string pathfile_name =
-            "/home/jianyun/catkin_ws/src/Sailboat-Ros/PATH_PLANNING/python/path_1028_" + ss.str() + "obs.txt";
+            "/home/jianyun/catkin_ws/src/Sailboat-Ros/PATH_PLANNING/python/sim_data/path_1028_" + ss.str() + "obs.txt";
     pathfile_1028.open(pathfile_name);
 
     std::string mapfile_name =
-            "/home/jianyun/catkin_ws/src/Sailboat-Ros/PATH_PLANNING/python/map_1028_" + ss.str() + "obs.txt";
+            "/home/jianyun/catkin_ws/src/Sailboat-Ros/PATH_PLANNING/python/sim_data/map_1028_" + ss.str() + "obs.txt";
     mapfile_1028.open(mapfile_name);
 
 //    pathfile_1028.open("/home/jianyun/catkin_ws/src/Sailboat-Ros/PATH_PLANNING/python/path_1028_0obs.txt");

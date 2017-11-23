@@ -37,14 +37,16 @@ int Astar::calcG(Point *temp_start, Point *point) {
     double windG = exp((-cos(deltaAngle) - 0.25) * 8);
     // 转向损失
     double deltaAngle2 = stepAngle - temp_start->heading;
-    double turnG = exp((-cos(deltaAngle2)) * 3);
+//    double turnG = exp((-cos(deltaAngle2)) * 3);
+    double turnG = fabs(20/M_PI*wrapAngle(deltaAngle2));
 
     if (1) {
         deltaAngle2 = wrapAngle(deltaAngle2);
         double deltaAngle3 = windAngle + M_PI - temp_start->heading;
         deltaAngle3 = wrapAngle(deltaAngle3);
         if (fabs(deltaAngle2) > fabs(deltaAngle3))
-            turnG *= 2;
+//            turnG *= 2;
+            turnG += 30;
     }
 //    std::cout << "point: " << point->x << ", " << point->y << " deltaAngle2: " << wrapAngle(deltaAngle2) * 57.3 << std::endl;
 

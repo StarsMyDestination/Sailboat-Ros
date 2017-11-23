@@ -5,7 +5,7 @@
 
 
 namespace detection {
-    cv::Mat edgeDetection(cv::Mat img_src, u_int8_t low_threshold=100, u_int8_t high_threshold=200) {
+    cv::Mat edgeDetection(cv::Mat img_src, cv::Mat& s_img, u_int8_t low_threshold=100, u_int8_t high_threshold=200) {
 //    cv::Mat img_clone = img_src.clone();
         cv::Mat dst, edge, gray, hls;
 
@@ -22,8 +22,8 @@ namespace detection {
         cv::Mat l_img = hls_channels[1];
 //        imshow("lightness", l_img);
 //        cv::waitKey(0);
-        cv::Mat s_img = hls_channels[2];
-        imshow("saturation", s_img);
+        s_img = hls_channels[2];
+//        imshow("saturation", s_img);
         cv::waitKey(5);
 
         GaussianBlur(s_img, edge, cv::Size(9, 9), 2, 2);

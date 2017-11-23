@@ -43,7 +43,7 @@ static double alpha = 1;
 static double beta = 1;
 
 
-static int obs_switch = 0;
+static int obs_switch = 2;
 
 Astar astar;
 
@@ -54,7 +54,7 @@ std::vector <Eigen::Vector2d> obs_ne_vector_3;
 
 std::vector <Eigen::Vector2d> target_points_ne;
 
-std::list<double> wind_list;
+std::list<Eigen::Vector2d> wind_list;
 
 int cnt = 0;
 int tar_cnt = 0;
@@ -120,15 +120,17 @@ void cfg_cb(path_planning_astar::path_planning_Config &config, uint32_t level) {
 void sensor_cb(const sailboat_message::WTST_Pro_msgConstPtr &sensor_in) {
 //    cout << "in sensor cb" << endl;
     double wind = sensor_in->WindDirectionTrue / 57.3;
+    double wind_speed = sensor_in->WindSpeed;
+    Eigen::Vector2d tmp(wind, wind_speed);
     wind_list.pop_front();
-    wind_list.push_back(wind);
+    wind_list.push_back(tmp);
     int wind_cnt = 0;
     double wind_sum_x = 0;
     double wind_sum_y = 0;
     for (auto wind_tmp:wind_list) {
-        if (wind_tmp == -999) continue;
-        wind_sum_x += 1 * cos(wind_tmp);
-        wind_sum_y += 1 * sin(wind_tmp);
+        if (wind_tmp[0] == -999) continue;
+        wind_sum_x += wind_tmp[1] * cos(wind_tmp[0]);
+        wind_sum_y += wind_tmp[1] * sin(wind_tmp[0]);
         wind_cnt++;
     }
     wind = atan2(wind_sum_y / wind_cnt, wind_sum_x / wind_cnt);
@@ -153,7 +155,7 @@ void sensor_cb(const sailboat_message::WTST_Pro_msgConstPtr &sensor_in) {
         cnt = 0;
         obs_coords_to_pub.points.clear();
 
-        cout << "wind angle: " << ", " << wind << endl;
+        cout << "wind angle: " << ", " << wind*57.3 << endl;
 
         Eigen::Vector2d start_ne(sensor_in->PosX, sensor_in->PosY);
         Eigen::Vector2d end_ne;
@@ -222,7 +224,7 @@ void sensor_cb(const sailboat_message::WTST_Pro_msgConstPtr &sensor_in) {
 
         //A*算法找寻路径
         list < Point * > path = astar.GetPath(start, end, false);
-        cout << "###############" << endl;
+        cout << "############### " << cb_cnt << endl;
         nav_msgs::Path traj;
         vector <Eigen::Vector2d> path_ne;
 
@@ -345,7 +347,8 @@ int main(int argc, char **argv) {
 
 
     for (int i = 0; i < 20; i++) {
-        wind_list.push_back(-999);
+        Eigen::Vector2d tmp(-999, -999);
+        wind_list.push_back(tmp);
     }
 
     dynamic_reconfigure::Server <path_planning_astar::path_planning_Config> dserver;
@@ -355,14 +358,20 @@ int main(int argc, char **argv) {
 
     ros::Subscriber sensor_sub = nh.subscribe("/wtst_pro", 2, &sensor_cb);
 
-    pub_path = nh.advertise<nav_msgs::Path>("/planned_path_1020", 2);
+    pub_path = nh.advertise<nav_msgs::Path>("/planned_path_1028", 2);
     pub_obs = nh.advertise<sailboat_message::PointArray>("/obstacle_coords_1020", 2);
     ros::Publisher pub_targets;
     pub_targets = nh.advertise<sailboat_message::PointArray>("/target_coords_1020", 2);
 
+    std::stringstream ss;
+    ss << obs_switch * 3;
+    std::string pathfile_name =
+            "/home/jianyun/catkin_ws/src/Sailboat-Ros/PATH_PLANNING/python/path_1028_" + ss.str() + "obs.txt";
+    pathfile_1028.open(pathfile_name);
 
-    pathfile_1028.open("/home/jianyun/catkin_ws/src/Sailboat-Ros/PATH_PLANNING/python/path_1028_0obs.txt");
-    mapfile_1028.open("/home/jianyun/catkin_ws/src/Sailboat-Ros/PATH_PLANNING/python/map_1028_0obs.txt");
+    std::string mapfile_name =
+            "/home/jianyun/catkin_ws/src/Sailboat-Ros/PATH_PLANNING/python/map_1028_" + ss.str() + "obs.txt";
+    mapfile_1028.open(mapfile_name);
 
 
     ros::Rate loo_rate(10);
